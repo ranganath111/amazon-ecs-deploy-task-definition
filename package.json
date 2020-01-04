@@ -1,5 +1,5 @@
 {
-  "name": "aws-actions-amazon-ecs-deploy-task-definition",
+  "name": "ranganath111-amazon-ecs-deploy-task-definition-x",
   "version": "0.0.0",
   "description": "Registers an Amazon ECS task definition and deploys it to an ECS service.",
   "main": "index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aws-actions/amazon-ecs-deploy-task-definition.git"
+    "url": "git+https://github.com/ranganath111/amazon-ecs-deploy-task-definition.git"
   },
   "keywords": [
     "AWS",
@@ -21,9 +21,9 @@
   "author": "AWS",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/aws-actions/amazon-ecs-deploy-task-definition/issues"
+    "url": "https://github.com/ranganath111/amazon-ecs-deploy-task-definition/issues"
   },
-  "homepage": "https://github.com/aws-actions/amazon-ecs-deploy-task-definition#readme",
+  "homepage": "https://github.com/ranganath111/amazon-ecs-deploy-task-definition#readme",
   "dependencies": {
     "@actions/core": "^1.2.0",
     "aws-sdk": "^2.596.0",
