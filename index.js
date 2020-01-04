@@ -30,39 +30,6 @@ async function updateEcsService(ecs, clusterName, service, waitForService) {
   }
 }
 
-// Find value in a CodeDeploy AppSpec file with a case-insensitive key
-function findAppSpecValue(obj, keyName) {
-  return obj[findAppSpecKey(obj, keyName)];
-}
-
-function findAppSpecKey(obj, keyName) {
-  if (!obj) {
-    throw new Error(`AppSpec file must include property '${keyName}'`);
-  }
-
-  const keyToMatch = keyName.toLowerCase();
-
-  for (var key in obj) {
-    if (key.toLowerCase() == keyToMatch) {
-      return key;
-    }
-  }
-
-  throw new Error(`AppSpec file must include property '${keyName}'`);
-}
-
-function undefinedOrNullReplacer(_, value) {
-  if (value === null || value === undefined) {
-    return undefined;
-  }
-
-  return value;
-}
-
-function cleanNullKeys(obj) {
-  return JSON.parse(JSON.stringify(obj, undefinedOrNullReplacer));
-}
-
 // Deploy to a service that uses the 'CODE_DEPLOY' deployment controller
 async function createCodeDeployDeployment(codedeploy, clusterName, service, waitForService) {
   core.debug('Updating AppSpec file with new task definition ARN');
@@ -88,14 +55,6 @@ async function createCodeDeployDeployment(codedeploy, clusterName, service, wait
     path.join(process.env.GITHUB_WORKSPACE, codeDeployAppSpecFile);
   const fileContents = fs.readFileSync(appSpecPath, 'utf8');
   const appSpecContents = yaml.parse(fileContents);
-
-  for (var resource of findAppSpecValue(appSpecContents, 'resources')) {
-    for (var name in resource) {
-      const resourceContents = resource[name];
-      const properties = findAppSpecValue(resourceContents, 'properties');
-    }
-  }
-
   const appSpecString = JSON.stringify(appSpecContents);
   const appSpecHash = crypto.createHash('sha256').update(appSpecString).digest('hex');
 
