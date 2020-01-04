@@ -11,12 +11,11 @@ const CODE_DEPLOY_MIN_WAIT_MINUTES = 30;
 const CODE_DEPLOY_WAIT_DEFAULT_DELAY_SEC = 15;
 
 // Deploy to a service that uses the 'ECS' deployment controller
-async function updateEcsService(ecs, clusterName, service, taskDefArn, waitForService) {
+async function updateEcsService(ecs, clusterName, service, waitForService) {
   core.debug('Updating the service');
   await ecs.updateService({
     cluster: clusterName,
-    service: service,
-    taskDefinition: taskDefArn
+    service: service
   }).promise();
 
   // Wait for service stability
@@ -65,7 +64,7 @@ function cleanNullKeys(obj) {
 }
 
 // Deploy to a service that uses the 'CODE_DEPLOY' deployment controller
-async function createCodeDeployDeployment(codedeploy, clusterName, service, taskDefArn, waitForService) {
+async function createCodeDeployDeployment(codedeploy, clusterName, service, waitForService) {
   core.debug('Updating AppSpec file with new task definition ARN');
 
   let codeDeployAppSpecFile = core.getInput('codedeploy-appspec', { required : false });
@@ -94,8 +93,6 @@ async function createCodeDeployDeployment(codedeploy, clusterName, service, task
     for (var name in resource) {
       const resourceContents = resource[name];
       const properties = findAppSpecValue(resourceContents, 'properties');
-      const taskDefKey = findAppSpecKey(properties, 'taskDefinition');
-      properties[taskDefKey] = taskDefArn;
     }
   }
 
@@ -154,23 +151,11 @@ async function run() {
     });
 
     // Get inputs
-    const taskDefinitionFile = core.getInput('task-definition', { required: true });
     const service = core.getInput('service', { required: false });
     const cluster = core.getInput('cluster', { required: false });
     const waitForService = core.getInput('wait-for-service-stability', { required: false });
 
-    // Register the task definition
-    core.debug('Registering the task definition');
-    const taskDefPath = path.isAbsolute(taskDefinitionFile) ?
-      taskDefinitionFile :
-      path.join(process.env.GITHUB_WORKSPACE, taskDefinitionFile);
-    const fileContents = fs.readFileSync(taskDefPath, 'utf8');
-    const taskDefContents = cleanNullKeys(yaml.parse(fileContents));
-    const registerResponse = await ecs.registerTaskDefinition(taskDefContents).promise();
-    const taskDefArn = registerResponse.taskDefinition.taskDefinitionArn;
-    core.setOutput('task-definition-arn', taskDefArn);
-
-    // Update the service with the new task definition
+    // Update the service with the existing task definition
     if (service) {
       const clusterName = cluster ? cluster : 'default';
 
@@ -192,10 +177,10 @@ async function run() {
 
       if (!serviceResponse.deploymentController) {
         // Service uses the 'ECS' deployment controller, so we can call UpdateService
-        await updateEcsService(ecs, clusterName, service, taskDefArn, waitForService);
+        await updateEcsService(ecs, clusterName, service, waitForService);
       } else if (serviceResponse.deploymentController.type == 'CODE_DEPLOY') {
         // Service uses CodeDeploy, so we should start a CodeDeploy deployment
-        await createCodeDeployDeployment(codedeploy, clusterName, service, taskDefArn, waitForService);
+        await createCodeDeployDeployment(codedeploy, clusterName, service, waitForService);
       } else {
         throw new Error(`Unsupported deployment controller: ${serviceResponse.deploymentController.type}`);
       }
